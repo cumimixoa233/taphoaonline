@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🛒 Cửa Hàng Tạp Hóa Online</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+    }
+    .product img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: contain;
+    }
+    .cart ul {
+      list-style: none;
+      padding: 0;
+    }
+    .cart li {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<!-- Bootstrap Bundle JS để modal hoạt động -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<body>
+  <header class="bg-success text-white text-center py-4">
+    <h1>🛒 Cửa Hàng Tạp Hóa Online</h1>
+    <p>Mua sắm dễ dàng, giao hàng tận nơi!</p>
+  </header>
+  
+<!------------------------ ĐÂY LÀ PHẦN LOGIN DÀNH CHO QUẢN TRỊ VIÊN---------------------------------------------->
+<!-- Nút đăng nhập / đăng ký -->
+<div class="container my-4 d-flex justify-content-end">
+  <button class="btn btn-primary me-2" onclick="toggleForm('login')">🔐 Đăng nhập</button>
+  <button class="btn btn-outline-primary" onclick="toggleForm('register')">📝 Đăng ký</button>
+</div>
+
+<!-- Form đăng nhập -->
+<div class="container my-4 d-none" id="loginForm">
+  <h4>🔐 Đăng nhập quản trị</h4>
+  <form onsubmit="loginAdmin(event)">
+    <div class="mb-3">
+      <label for="adminUser" class="form-label">Tài khoản</label>
+      <input type="text" class="form-control" id="adminUser" required>
+    </div>
+    <div class="mb-3">
+      <label for="adminPass" class="form-label">Mật khẩu</label>
+      <input type="password" class="form-control" id="adminPass" required>
+    </div>
+    <button type="submit" class="btn btn-dark">🔓 Đăng nhập</button>
+  </form>
+  <div id="adminStatus" class="mt-3"></div>
+</div>
+
+<!-- Form đăng ký -->
+<div class="container my-4 d-none" id="registerForm">
+  <h4>📝 Đăng ký tài khoản mới</h4>
+  <form onsubmit="registerUser(event)">
+    <div class="mb-3">
+      <label for="newUser" class="form-label">Tên đăng nhập</label>
+      <input type="text" class="form-control" id="newUser" required>
+    </div>
+    <div class="mb-3">
+      <label for="newPass" class="form-label">Mật khẩu</label>
+      <input type="password" class="form-control" id="newPass" required>
+    </div>
+    <div class="mb-3">
+      <label for="newEmail" class="form-label">Email</label>
+      <input type="email" class="form-control" id="newEmail" required>
+    </div>
+    <button type="submit" class="btn btn-success">✅ Đăng ký</button>
+  </form>
+  <div id="registerStatus" class="mt-3"></div>
+</div>
+
+<div class="container d-flex justify-content-end align-items-center gap-3 mb-4 d-none" id="userGreeting">
+  <div class="alert alert-success mb-0">👋 Xin chào, <span id="loggedInUser"></span>!</div>
+  <button class="btn btn-outline-danger" onclick="logoutAdmin()">🚪 Đăng xuất</button>
+</div>
+
+<script>
+  const adminAccount = {
+    username: "admin",
+    password: "123456"
+  };
+
+  function toggleForm(form) {
+    document.getElementById("loginForm").classList.add("d-none");
+    document.getElementById("registerForm").classList.add("d-none");
+    if (form === "login") {
+      document.getElementById("loginForm").classList.remove("d-none");
+    } else {
+      document.getElementById("registerForm").classList.remove("d-none");
+    }
+  }
+
+  function loginAdmin(event) {
+    event.preventDefault();
+    const user = document.getElementById("adminUser").value;
+    const pass = document.getElementById("adminPass").value;
+    const status = document.getElementById("adminStatus");
+
+    if (user === adminAccount.username && pass === adminAccount.password) {
+      status.innerHTML = `<div class='alert alert-success'>✅ Đăng nhập thành công!</div>`;
+      document.getElementById("loginForm").classList.add("d-none");
+      document.querySelector(".container.my-4.d-flex.justify-content-end").style.display = "none";
+      document.getElementById("loggedInUser").textContent = user;
+      document.getElementById("userGreeting").classList.remove("d-none");
+      document.getElementById("adminDashboard").classList.remove("d-none");
+      document.getElementById("orderSection").classList.remove("d-none");
+    } else {
+      status.innerHTML = `<div class='alert alert-danger'>❌ Sai tài khoản hoặc mật khẩu!</div>`;
+    }
+  }
+
+  function registerUser(event) {
+    event.preventDefault();
+    const user = document.getElementById("newUser").value;
+    const pass = document.getElementById("newPass").value;
+    const email = document.getElementById("newEmail").value;
+    document.getElementById("registerStatus").innerHTML = `<div class='alert alert-info'>📬 Đã đăng ký tài khoản: ${user} (${email})</div>`;
+  }
+
+  function logoutAdmin() {
+    document.getElementById("userGreeting").classList.add("d-none");
+    document.getElementById("adminDashboard").classList.add("d-none");
+    document.getElementById("orderSection").classList.add("d-none");
+    document.querySelector(".container.my-4.d-flex.justify-content-end").style.display = "flex";
+    document.getElementById("adminUser").value = "";
+    document.getElementById("adminPass").value = "";
+    document.getElementById("adminStatus").innerHTML = "";
+  }
+
+  function addProduct(event) {
+    event.preventDefault();
+    const name = document.getElementById("newProductName").value;
+    const price = document.getElementById("newProductPrice").value;
+    const table = document.getElementById("productTable");
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${name}</td><td>${parseInt(price).toLocaleString()}đ</td><td><button class='btn btn-sm btn-danger' onclick='this.closest("tr").remove()'>Xóa</button></td>`;
+    table.appendChild(row);
+    document.getElementById("addProductForm").reset();
+  }
+  
+   // Đơn hàng mẫu lưu trữ trong localStorage
+  const sampleOrders = [
+    { id: 1001, customer: "Nguyễn Văn A", date: "22/04/2025", total: 350000, status: "Đã giao" },
+    { id: 1002, customer: "Trần Thị B", date: "22/04/2025", total: 220000, status: "Đang giao" }
+  ];
+  localStorage.setItem("orders", JSON.stringify(sampleOrders));
+
+  function loadOrders() {
+    const orders = JSON.parse(localStorage.getItem("orders")) || [];
+    const tbody = document.querySelector("#orderSection tbody");
+    tbody.innerHTML = "";
+    orders.forEach((order, index) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>#${order.id}</td>
+        <td>${order.customer}</td>
+        <td>${order.date}</td>
+        <td>${order.total.toLocaleString()}đ</td>
+        <td>
+          <select onchange="updateOrderStatus(${index}, this.value)" class="form-select">
+            <option ${order.status === "Chờ xử lý" ? "selected" : ""}>Chờ xử lý</option>
+            <option ${order.status === "Đang giao" ? "selected" : ""}>Đang giao</option>
+            <option ${order.status === "Đã giao" ? "selected" : ""}>Đã giao</option>
+          </select>
+        </td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  function updateOrderStatus(index, newStatus) {
+    const orders = JSON.parse(localStorage.getItem("orders")) || [];
+    orders[index].status = newStatus;
+    localStorage.setItem("orders", JSON.stringify(orders));
+    loadOrders();
+  }
+
+  
+</script>
+
+
+<!-- Dashboard quản trị -->
+<div id="adminDashboard" class="container my-4 d-none">
+  <h4>📊 Bảng điều khiển quản trị</h4>
+  <div class="alert alert-info">Chào mừng bạn đến khu vực quản lý sản phẩm.</div>
+
+  <div class="card p-3 mb-3">
+    <h5 class="mb-3">🧾 Danh sách sản phẩm</h5>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Tên sản phẩm</th>
+          <th>Giá</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody id="productTable">
+        <tr>
+          <td>Bánh Oreo</td>
+          <td>10.000đ</td>
+          <td><button class="btn btn-sm btn-danger">Xóa</button></td>
+        </tr>
+        <tr>
+          <td>Gạo Thơm</td>
+          <td>25.000đ</td>
+          <td><button class="btn btn-sm btn-danger">Xóa</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card p-3">
+    <h5 class="mb-3">➕ Thêm sản phẩm mới</h5>
+    <form id="addProductForm" onsubmit="addProduct(event)">
+      <div class="row">
+        <div class="col-md-4">
+          <input type="text" class="form-control mb-2" id="newProductName" placeholder="Tên sản phẩm" required />
+        </div>
+        <div class="col-md-4">
+          <input type="number" class="form-control mb-2" id="newProductPrice" placeholder="Giá (VND)" required />
+        </div>
+		<div class="col-md-4">
+          <input type="url" class="form-control mb-2" id="newProductImage" placeholder="URL hình ảnh" required />
+        </div>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-success w-100">Thêm</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Quản lý đơn hàng -->
+<div id="orderSection" class="container my-4 d-none">
+  <h4>📦 Quản lý đơn hàng</h4>
+  <div class="alert alert-secondary">Chức năng quản lý đơn hàng sẽ được cập nhật tại đây.</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Mã đơn</th>
+        <th>Khách hàng</th>
+        <th>Ngày</th>
+        <th>Tổng tiền</th>
+        <th>Trạng thái</th>
+        <th>Xem chi tiết</th>
+		
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>#1001</td>
+        <td>Nguyễn Văn A</td>
+        <td>22/04/2025</td>
+        <td>350.000đ</td>
+        <td>✔️ Đã giao</td>
+      </tr>
+      <tr>
+        <td>#1002</td>
+        <td>Trần Thị B</td>
+        <td>22/04/2025</td>
+        <td>220.000đ</td>
+        <td>🚚 Đang giao</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div id="productList" class="row">
+  <!-- Các sản phẩm sẽ được phân trang tự động qua JavaScript -->
+</div>
+
+<!-- Modal chi tiết sản phẩm -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel">Chi tiết sản phẩm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImage" src="" class="img-fluid mb-3" alt="">
+        <h5 id="modalName"></h5>
+        <p id="modalPrice" class="fw-bold text-success"></p>
+        <button id="modalAddBtn" class="btn btn-warning">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="productList" class="row">
+  <!-- Các sản phẩm sẽ được phân trang tự động qua JavaScript -->
+</div>
+
+
+<!-- Modal chi tiết sản phẩm -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel">Chi tiết sản phẩm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImage" src="" class="img-fluid mb-3" alt="">
+        <h5 id="modalName"></h5>
+        <p id="modalPrice" class="fw-bold text-success"></p>
+        <button id="modalAddBtn" class="btn btn-warning">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<nav class="bg-success-subtle py-2">
+  <div class="container d-flex justify-content-center gap-3">
+    <a href="#" class="text-success fw-bold text-decoration-none">Trang chủ</a>
+    <div class="dropdown">
+      <a class="text-success fw-bold text-decoration-none dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Sản phẩm
+      </a>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#" onclick="filterCategoryFromNav('do-kho')">Đồ khô</a></li>
+        <li><a class="dropdown-item" href="#" onclick="filterCategoryFromNav('nuoc-uong')">Nước uống</a></li>
+        <li><a class="dropdown-item" href="#" onclick="filterCategoryFromNav('bia-ruou')">Bia - Rượu</a></li>
+        <li><a class="dropdown-item" href="#" onclick="filterCategoryFromNav('banh-keo')">Bánh kẹo</a></li>
+      </ul>
+    </div>
+    <a href="#" class="text-success fw-bold text-decoration-none">Khuyến mãi</a>
+    <a href="#" class="text-success fw-bold text-decoration-none">Liên hệ</a>
+	<a href="#" class="text-success fw-bold text-decoration-none" onclick="showContact(event)">Liên hệ</a>
+	  <div class="container mt-3 d-none text-center" id="contactInfo">
+	  <p class="text-info fs-5">📞 Liên hệ: 0377540431 hoặc 0972878732</p>
+	</div>
+	</div>
+
+
+<script>
+function showContact(e) {
+  e.preventDefault();
+  const contact = document.getElementById("contactInfo");
+  contact.classList.toggle("d-none");
+}
+</script>
+  </div>
+</nav>
+
+
+
+  <main class="container py-4">
+    <div class="row mb-3">
+      <div class="col-md-6 mb-2">
+        <input type="text" id="searchInput" class="form-control" placeholder="🔍 Tìm kiếm sản phẩm..." onkeyup="searchProducts()">
+      </div>
+      <div class="col-md-6">
+        <select id="categorySelect" class="form-select" onchange="filterCategory()">
+          <option value="all">Tất cả</option>
+          <option value="do-kho">Đồ khô</option>
+          <option value="nuoc-uong">Nước uống</option>
+          <option value="banh-keo">Bánh kẹo</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="productList" class="row">
+  <div class="col-md-4 mb-4 product" data-category="banh-keo">
+    <div class="card h-100 text-center">
+      <img src="https://cdn.tgdd.vn/Products/Images/8788/250263/bhx/banh-oreo-socola-vanilla-hop-133g-202312130850399671.jpg" alt="Bánh Oreo Vani" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Bánh Oreo Vani</h5>
+        <p class="card-text text-success fw-bold">12.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Bánh Oreo Vani', 12000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="banh-keo">
+    <div class="card h-100 text-center">
+      <img src="https://via.placeholder.com/150" alt="Bánh Oreo" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Bánh Oreo</h5>
+        <p class="card-text text-success fw-bold">10.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Bánh Oreo', 10000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="do-kho">
+    <div class="card h-100 text-center">
+      <img src="https://cdn.tgdd.vn/Products/Images/8788/255412/bhx/bim-bim-cua-bento-22g-202312141106020942.jpg" alt="Bim Bim Bento Vị Cua" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Bim Bim Bento Vị Cua</h5>
+        <p class="card-text text-success fw-bold">9.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Bim Bim Bento Vị Cua', 9000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="banh-keo">
+    <div class="card h-100 text-center">
+      <img src="https://via.placeholder.com/150" alt="Bim Bim Oishi" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Bim Bim Oishi</h5>
+        <p class="card-text text-success fw-bold">7.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Bim Bim Oishi', 7000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="do-kho">
+    <div class="card h-100 text-center">
+      <img src="https://via.placeholder.com/150" alt="Dầu Ăn" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Dầu Ăn Meizan</h5>
+        <p class="card-text text-success fw-bold">40.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Dầu Ăn Meizan', 40000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="do-kho">
+    <div class="card h-100 text-center">
+      <img src="https://via.placeholder.com/150" alt="Gạo Thơm" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Gạo Thơm</h5>
+        <p class="card-text text-success fw-bold">25.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Gạo Thơm', 25000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="banh-keo">
+    <div class="card h-100 text-center">
+      <img src="https://via.placeholder.com/150" alt="Kẹo Alpenliebe" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Kẹo Alpenliebe</h5>
+        <p class="card-text text-success fw-bold">5.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Kẹo Alpenliebe', 5000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="nuoc-uong">
+    <div class="card h-100 text-center">
+      <img src="https://via.placeholder.com/150" alt="Nước Mắm" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Nước Mắm Nam Ngư</h5>
+        <p class="card-text text-success fw-bold">35.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Nước Mắm Nam Ngư', 35000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4 product" data-category="nuoc-uong">
+    <div class="card h-100 text-center">
+      <img src="https://cdn.tgdd.vn/Products/Images/2473/251020/bhx/tra-xanh-khong-do-455ml-202309221106170800.jpg" alt="Trà Xanh Không Độ" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Trà Xanh Không Độ</h5>
+        <p class="card-text text-success fw-bold">8.000đ</p>
+        <button class="btn btn-warning" onclick="addToCart('Trà Xanh Không Độ', 8000)">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+ 
+ 
+
+ 
+<div id="productList" class="row">
+  <!-- Các sản phẩm sẽ được phân trang tự động qua JavaScript -->
+</div>
+
+<div class="d-flex justify-content-center my-4">
+  <button id="prevPage" class="btn btn-outline-secondary me-2" onclick="changePage(-1)">Trang trước</button>
+  <button id="nextPage" class="btn btn-outline-primary" onclick="changePage(1)">Xem thêm</button>
+</div>
+
+<!-- Modal chi tiết sản phẩm -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel">Chi tiết sản phẩm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImage" src="" class="img-fluid mb-3" alt="">
+        <h5 id="modalName"></h5>
+        <p id="modalPrice" class="fw-bold text-success"></p>
+        <button id="modalAddBtn" class="btn btn-warning">Thêm vào giỏ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Form thanh toán giả lập -->
+<div class="container my-5">
+  <h4>📦 Thông tin đặt hàng</h4>
+  <form id="checkoutForm" onsubmit="submitOrder(event)">
+    <div class="mb-3">
+      <label for="name" class="form-label">Họ tên</label>
+      <input type="text" class="form-control" id="name" required>
+    </div>
+    <div class="mb-3">
+      <label for="address" class="form-label">Địa chỉ</label>
+      <input type="text" class="form-control" id="address" required>
+    </div>
+    <div class="mb-3">
+      <label for="phone" class="form-label">Số điện thoại</label>
+      <input type="tel" class="form-control" id="phone" required>
+    </div>
+    <button type="submit" class="btn btn-success">🛍 Đặt hàng</button>
+  </form>
+  <div id="orderSummary" class="mt-4"></div>
+</div>
+
+<script>
+  const productsData = [
+    {
+      name: "Bánh Oreo Vani",
+      price: 12000,
+      image: "https://cdn.tgdd.vn/Products/Images/8788/250263/bhx/banh-oreo-socola-vanilla-hop-133g-202312130850399671.jpg",
+      category: "banh-keo"
+    },
+    {
+      name: "Trà Xanh Không Độ",
+      price: 8000,
+      image: "https://cdn.tgdd.vn/Products/Images/2473/251020/bhx/tra-xanh-khong-do-455ml-202309221106170800.jpg",
+      category: "nuoc-uong"
+    },
+    {
+      name: "Dầu Ăn Meizan",
+      price: 40000,
+      image: "https://via.placeholder.com/150",
+      category: "do-kho"
+    },
+    {
+      name: "Bánh Oreo",
+      price: 10000,
+      image: "https://via.placeholder.com/150",
+      category: "banh-keo"
+    },
+    {
+      name: "Nước Mắm Nam Ngư",
+      price: 35000,
+      image: "https://via.placeholder.com/150",
+      category: "nuoc-uong"
+    },
+    {
+      name: "Gạo Thơm",
+      price: 25000,
+      image: "https://via.placeholder.com/150",
+      category: "do-kho"
+    },
+    {
+      name: "Bim Bim Bento Vị Cua",
+      price: 9000,
+      image: "https://cdn.tgdd.vn/Products/Images/8788/255412/bhx/bim-bim-cua-bento-22g-202312141106020942.jpg",
+      category: "do-kho"
+    },
+    {
+      name: "Kẹo Alpenliebe",
+      price: 5000,
+      image: "https://via.placeholder.com/150",
+      category: "banh-keo"
+    },
+    {
+      name: "Bim Bim Oishi",
+      price: 7000,
+      image: "https://via.placeholder.com/150",
+      category: "banh-keo"
+    }
+  ];
+
+<!-- Form thanh toán giả lập -->
+<div class="container my-5">
+  <h4>📦 Thông tin đặt hàng</h4>
+  <form id="checkoutForm" onsubmit="submitOrder(event)">
+    <div class="mb-3">
+      <label for="name" class="form-label">Họ tên</label>
+      <input type="text" class="form-control" id="name" required>
+    </div>
+    <div class="mb-3">
+      <label for="address" class="form-label">Địa chỉ</label>
+      <input type="text" class="form-control" id="address" required>
+    </div>
+    <div class="mb-3">
+      <label for="phone" class="form-label">Số điện thoại</label>
+      <input type="tel" class="form-control" id="phone" required>
+    </div>
+    <button type="submit" class="btn btn-success">🛍 Đặt hàng</button>
+  </form>
+  <div id="orderSummary" class="mt-4"></div>
+</div>
+
+<script>
+  const productsData = [...]; // Giữ nguyên mảng sản phẩm
+  let cart = [];
+
+  function showProductDetail(name) {
+    const product = productsData.find(p => p.name === name);
+    if (product) {
+      document.getElementById("modalImage").src = product.image;
+      document.getElementById("modalName").textContent = product.name;
+      document.getElementById("modalPrice").textContent = product.price.toLocaleString() + "đ";
+      const addBtn = document.getElementById("modalAddBtn");
+      addBtn.onclick = () => addToCart(product.name, product.price);
+      new bootstrap.Modal(document.getElementById('productModal')).show();
+    }
+  }
+
+  function renderProducts() {
+    const productList = document.getElementById("productList");
+    productList.innerHTML = "";
+    const start = (currentPage - 1) * perPage;
+    const pageItems = productsData.slice(start, start + perPage);
+
+    pageItems.forEach(product => {
+      const col = document.createElement("div");
+      col.className = "col-md-4 mb-4 product";
+      col.setAttribute("data-category", product.category);
+      col.innerHTML = `
+        <div class="card h-100 text-center">
+          <img src="${product.image}" alt="${product.name}" class="card-img-top">
+          <div class="card-body">
+            <h5 class="card-title text-primary" style="cursor:pointer" onclick="showProductDetail('${product.name}')">${product.name}</h5>
+            <p class="card-text text-success fw-bold">${product.price.toLocaleString()}đ</p>
+            <button class="btn btn-warning" onclick="addToCart('${product.name}', ${product.price})">Thêm vào giỏ</button>
+          </div>
+        </div>`;
+      productList.appendChild(col);
+    });
+
+    document.getElementById("prevPage").disabled = currentPage === 1;
+    document.getElementById("nextPage").disabled = start + perPage >= productsData.length;
+  }
+
+  document.addEventListener("DOMContentLoaded", renderProducts);
+</script>
+
+
+
+<script>
+  const productsData = [...]; // Giữ nguyên mảng sản phẩm
+  let cart = [];
+
+  function showProductDetail(name) {
+    const product = productsData.find(p => p.name === name);
+    if (product) {
+      document.getElementById("modalImage").src = product.image;
+      document.getElementById("modalName").textContent = product.name;
+      document.getElementById("modalPrice").textContent = product.price.toLocaleString() + "đ";
+      const addBtn = document.getElementById("modalAddBtn");
+      addBtn.onclick = () => addToCart(product.name, product.price);
+      new bootstrap.Modal(document.getElementById('productModal')).show();
+    }
+  }
+
+  // Chèn gọi showProductDetail vào card sản phẩm trong renderProducts
+</script>
+		
+    <div class="cart bg-warning-subtle rounded p-3 mt-4">
+      <h3>🛒 Giỏ Hàng</h3>
+      <ul id="cartItems"></ul>
+      <p class="fw-bold">Tổng cộng: <span id="totalPrice">0</span>đ</p>
+    </div>
+  </main>
+
+  <footer class="bg-dark text-white text-center py-3">
+    &copy; 2025 Cửa Hàng Tạp Hóa Online | Hotline: 1900-1234
+  </footer>
+
+  <script>
+    let cart = [];
+
+    function addToCart(name, price) {
+      const existing = cart.find(item => item.name === name);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ name, price, quantity: 1 });
+      }
+      renderCart();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function renderCart() {
+      const cartItems = document.getElementById("cartItems");
+      const totalPrice = document.getElementById("totalPrice");
+      cartItems.innerHTML = "";
+      let total = 0;
+      cart.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${item.name} x ${item.quantity} = ${item.price * item.quantity}đ <button class='btn btn-sm btn-outline-danger' onclick="removeFromCart(${index})">Xóa</button>`;
+        cartItems.appendChild(li);
+        total += item.price * item.quantity;
+      });
+      totalPrice.textContent = total.toLocaleString();
+    }
+
+    function searchProducts() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const products = document.querySelectorAll(".product");
+
+      products.forEach(product => {
+        const name = product.querySelector(".card-title").innerText.toLowerCase();
+        product.style.display = name.includes(input) ? "block" : "none";
+      });
+    }
+
+    function filterCategory() {
+      const selected = document.getElementById("categorySelect").value;
+      const products = document.querySelectorAll(".product");
+      products.forEach(product => {
+        const category = product.getAttribute("data-category");
+        product.style.display = (selected === "all" || category === selected) ? "block" : "none";
+      });
+    }
+	function submitOrder(event) {
+  event.preventDefault();
+  if (cart.length === 0) {
+    alert("🛒 Giỏ hàng đang trống!");
+    return;
+  }
+
+  const name = document.getElementById("name").value;
+  const address = document.getElementById("address").value;
+  const phone = document.getElementById("phone").value;
+
+  let total = 0;
+  const items = cart.map(item => {
+    total += item.price * item.quantity;
+    return {
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      total: item.price * item.quantity
+    };
+  });
+
+  const order = {
+    name,
+    address,
+    phone,
+    total,
+    items,
+    date: new Date().toLocaleString()
+  };
+
+  const json = JSON.stringify(order, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `don_hang_${Date.now()}.json`;
+  link.click();
+
+  document.getElementById("orderSummary").innerHTML = `<h5>✅ Đơn hàng đã được tạo!</h5><pre>${json}</pre>`;
+  cart = [];
+  renderCart();
+  document.getElementById("checkoutForm").reset();
+}
+
+  </script>
+</body>
+</html>
